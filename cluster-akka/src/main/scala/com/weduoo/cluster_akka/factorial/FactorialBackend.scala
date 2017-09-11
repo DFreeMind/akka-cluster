@@ -32,6 +32,7 @@ object FactorialBackend {
   def main(args: Array[String]): Unit = {
     // Override the configuration of the port when specified as program argument
     val port = if (args.isEmpty) "0" else args(0)
+    //通过种子节点加入到集群中
     val config = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port").
       withFallback(ConfigFactory.parseString("akka.cluster.roles = [backend]")).
       withFallback(ConfigFactory.load("factorial"))

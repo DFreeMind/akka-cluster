@@ -21,16 +21,18 @@ class TransformationBackend extends Actor {
 
   // subscribe to cluster changes, MemberUp
   // re-subscribe when restart
+  // CurrentClusterState 信息作为snapshot会被首先发送给订阅者，
+  // 接下来发送的才是用户设置的信息
   override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
   override def postStop(): Unit = cluster.unsubscribe(self)
 
   def receive = {
     case TransformationJob(text) => sender() ! TransformationResult(text.toUpperCase)
-    case state: CurrentClusterState =>
+    case state: CurrentClusterState => 
       state.members.filter(_.status == MemberStatus.Up) foreach register
     case MemberUp(m) => register(m)
   }
-
+  
   def register(member: Member): Unit =
     if (member.hasRole("frontend"))
       context.actorSelection(RootActorPath(member.address) / "user" / "frontend") !
